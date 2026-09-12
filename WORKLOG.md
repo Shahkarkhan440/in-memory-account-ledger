@@ -34,3 +34,13 @@
 - Confirmed that an entry booked later but carrying an earlier value date affects that value date and all subsequent balances.
 - Added protection against entries belonging to other accounts.
 - All existing and new tests passed.
+
+## 2026-09-13 00:14:05 +0400
+
+- Implemented authorization and hold handling.
+- Added approval and decline rules based on available balance.
+- Kept authorization holds separate from ledger entries.
+- Added support for multiple active approved holds.
+- Added tests covering sufficient funds, insufficient funds, multiple holds, and ledger separation.
+- All existing and new tests passed.
+
