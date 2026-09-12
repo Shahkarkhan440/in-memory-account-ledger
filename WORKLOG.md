@@ -25,3 +25,12 @@
   - Confirmed future-dated entries do not affect earlier balances.
   - Added tests verifying ledger entries remain append-only.
 
+## 2026-09-12 23:55:00 +0400
+
+- Implemented the value-dated BalanceCalculator.
+- Separated balance calculation from ledger storage.
+- Added closing balance calculation for a specific account and day.
+- Added explicit coverage for backdated ledger entries.
+- Confirmed that an entry booked later but carrying an earlier value date affects that value date and all subsequent balances.
+- Added protection against entries belonging to other accounts.
+- All existing and new tests passed.
