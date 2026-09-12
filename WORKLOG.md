@@ -44,3 +44,19 @@
 - Added tests covering sufficient funds, insufficient funds, multiple holds, and ledger separation.
 - All existing and new tests passed.
 
+
+## 2026-09-13 00:46:22 +0400
+
+- Implemented settlement domain model and settlement service.
+- Added settlement lifecycle from APPROVED authorization to SETTLED.
+- Added support for partial settlement where the settlement amount is lower than the authorization hold.
+- Released the active hold after successful settlement.
+- Posted only the actual settlement amount to the append-only ledger.
+- Added failure handling for unknown authorizations.
+- Added failure handling when settlement exceeds the authorization hold.
+- Added account ownership validation.
+- Added tests covering successful and failed settlement scenarios.
+- All tests passed.
+
+
+

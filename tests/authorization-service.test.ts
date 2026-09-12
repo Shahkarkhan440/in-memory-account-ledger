@@ -1,5 +1,5 @@
 import { describe, it } from "node:test";
-import assert from "node:assert/strict"; 
+import assert from "node:assert/strict";
 import { money } from "../src/domain/money.js";
 import { AuthorizationService } from "../src/authorization/authorization.js";
 
@@ -77,9 +77,50 @@ describe("AuthorizationService", () => {
 
     // Authorization state contains the hold,
     // but no ledger entry is created by this service.
-    assert.equal(
-      service.get("Auth-A")?.status,
-      "APPROVED",
+    assert.equal(service.get("Auth-A")?.status, "APPROVED");
+  });
+
+  it("marks an approved authorization as settled", () => {
+    const service = new AuthorizationService();
+
+    service.authorize(
+      "Auth-A",
+      "ACC-001",
+      money("AED", 25000n),
+      money("AED", 20000n),
     );
+
+    const result = service.markSettled("Auth-A", money("AED", 18500n));
+
+    assert.equal(result, true);
+
+    const authorization = service.get("Auth-A");
+
+    assert.equal(authorization?.status, "SETTLED");
+    assert.equal(authorization?.settlementAmount?.minorUnits, 18500n);
+
+    assert.equal(service.activeHoldsForAccount("ACC-001"), undefined);
+  });
+
+  it("does not settle an unknown authorization", () => {
+    const service = new AuthorizationService();
+
+    const result = service.markSettled("Auth-Z", money("AED", 18000n));
+
+    assert.equal(result, false);
+  });
+
+  it("does not settle an already settled authorization", () => {
+    const service = new AuthorizationService();
+
+    service.authorize(
+      "Auth-A",
+      "ACC-001",
+      money("AED", 25000n),
+      money("AED", 20000n),
+    ); 
+    assert.equal(service.markSettled("Auth-A", money("AED", 18500n)), true); 
+    assert.equal(service.markSettled("Auth-A", money("AED", 18000n)), false); 
+    assert.equal(service.get("Auth-A")?.settlementAmount?.minorUnits, 18500n);
   });
 });
