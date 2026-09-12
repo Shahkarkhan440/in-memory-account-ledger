@@ -4,8 +4,8 @@ export interface Reversal {
   readonly id: string;
   readonly accountId: string;
   readonly originalLedgerEntryId: string;
-  readonly originalAmount: Money;
-  readonly reversalAmount: Money;
+  readonly originalAmount?: Money;
+  readonly reversalAmount?: Money;
   readonly status: ReversalStatus;
 }
 

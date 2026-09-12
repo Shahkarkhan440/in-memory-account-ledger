@@ -58,5 +58,11 @@
 - Added tests covering successful and failed settlement scenarios.
 - All tests passed.
 
+## 2026-09-13 01:02:23 +0400
 
-
+- Implemented reversal processing.
+- Added compensating ledger entries without modifying original entries.
+- Preserved the original ledger entry value date on reversal.
+- Added failure handling for unknown ledger entries.
+- Added reversal service tests.
+- Confirmed all tests pass.
