@@ -66,3 +66,12 @@
 - Added failure handling for unknown ledger entries.
 - Added reversal service tests.
 - Confirmed all tests pass.
+
+
+## 2026-09-13 01:31:37 +0400
+
+- Added an integration test for the backdated E7/E9 reversal scenario.
+- Verified that E7 has a Day 2 value date and the E9 compensating entry also uses Day 2.
+- Verified that the Day 2 balance changes from AED -370.00 before reversal to AED 250.00 after reversal.
+- Verified that the original E7 ledger entry remains unchanged.
+- Confirmed the reversal is implemented as a new append-only ledger entry.
