@@ -75,3 +75,17 @@
 - Verified that the Day 2 balance changes from AED -370.00 before reversal to AED 250.00 after reversal.
 - Verified that the original E7 ledger entry remains unchanged.
 - Confirmed the reversal is implemented as a new append-only ledger entry.
+
+
+## 2026-09-13 12:29:28 +0400
+
+- Implemented the overdraft fee domain model and service.
+- Added AED 25.00 overdraft fee assessment for negative closing ledger balances.
+- Enforced a maximum of one overdraft fee per account per day.
+- Added the FEE ledger entry type.
+- Verified that fees are recorded as append-only ledger entries.
+- Added tests for negative, zero, and positive balances.
+- Added tests for duplicate fee prevention.
+- Added an integration test for the backdated E7 overdraft scenario.
+- Verified that the Day 2 balance changes from AED -370.00 before the fee to AED -395.00 after the fee.
+- Confirmed all 37 tests pass and the TypeScript build succeeds.
