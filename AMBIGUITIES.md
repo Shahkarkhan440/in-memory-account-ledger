@@ -97,3 +97,19 @@ Decision:
 - The installment amounts always sum exactly to the original total.
 - The event replay layer consumes the already-allocated installment
   amounts and does not perform the split itself.
+
+## Timing of overdraft fee assessment
+
+The specification states that an overdraft fee is assessed when an
+account's closing ledger balance for a day is negative. Because events
+can be backdated, an event processed later can change the closing
+balance of an earlier day.
+
+Decision:
+
+- Replay all events before assessing overdraft fees.
+- Determine the affected value dates from the replayed events.
+- Calculate each account's final closing ledger balance for each affected day.
+- Assess the fee only if that final closing balance is negative.
+- A maximum of one overdraft fee is assessed per account per day.
+- A backdated reversal can therefore remove the condition that would otherwise have caused an overdraft fee.

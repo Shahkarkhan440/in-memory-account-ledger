@@ -7,6 +7,7 @@ import { EventReplayer } from "../src/event-replay/event-replayer.js";
 import { Ledger } from "../src/ledger/ledger.js";
 import { SettlementService } from "../src/settlement/settlement.js";
 import { ReversalService } from "../src/reversal/reversal.js";
+import { OverdraftFeeService } from "../src/fees/overdraft-fee.js";
 
 const account = {
   id: "ACC-001",
@@ -23,6 +24,7 @@ describe("EventReplayer", () => {
       ledger,
     );
     const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -30,6 +32,7 @@ describe("EventReplayer", () => {
       authorizationService,
       settlementService,
       reversalService,
+      overdraftFeeService,
     );
 
     replayer.replay([
@@ -72,6 +75,7 @@ describe("EventReplayer", () => {
       ledger,
     );
     const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -79,6 +83,7 @@ describe("EventReplayer", () => {
       authorizationService,
       settlementService,
       reversalService,
+      overdraftFeeService,
     );
 
     replayer.replay([
@@ -114,6 +119,7 @@ describe("EventReplayer", () => {
       ledger,
     );
     const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -121,6 +127,7 @@ describe("EventReplayer", () => {
       authorizationService,
       settlementService,
       reversalService,
+      overdraftFeeService,
     );
 
     replayer.replay([
@@ -172,12 +179,15 @@ describe("EventReplayer", () => {
     );
 
     const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
+
     const replayer = new EventReplayer(
       ledger,
       [account],
       authorizationService,
       settlementService,
       reversalService,
+      overdraftFeeService,
     );
 
     replayer.replay([
@@ -243,6 +253,7 @@ describe("EventReplayer", () => {
     );
 
     const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -250,6 +261,7 @@ describe("EventReplayer", () => {
       authorizationService,
       settlementService,
       reversalService,
+      overdraftFeeService,
     );
 
     replayer.replay([
@@ -281,6 +293,9 @@ describe("EventReplayer", () => {
       ledgerBeforeReversal,
     );
     const reversalServiceBefore = new ReversalService(ledgerBeforeReversal);
+    const overdraftFeeServiceBefore = new OverdraftFeeService(
+      ledgerBeforeReversal,
+    );
 
     const replayerBefore = new EventReplayer(
       ledgerBeforeReversal,
@@ -288,6 +303,7 @@ describe("EventReplayer", () => {
       authorizationServiceBefore,
       settlementServiceBefore,
       reversalServiceBefore,
+      overdraftFeeServiceBefore,
     );
 
     replayerBefore.replay([
@@ -319,7 +335,7 @@ describe("EventReplayer", () => {
 
     assert.equal(
       ledgerBeforeReversal.balanceAt(account, 2).minorUnits,
-      -37000n,
+      -39500n,
     );
 
     const ledgerAfterReversal = new Ledger();
@@ -329,6 +345,9 @@ describe("EventReplayer", () => {
       ledgerAfterReversal,
     );
     const reversalServiceAfter = new ReversalService(ledgerAfterReversal);
+    const overdraftFeeServiceAfter = new OverdraftFeeService(
+      ledgerAfterReversal,
+    );
 
     const replayerAfter = new EventReplayer(
       ledgerAfterReversal,
@@ -336,6 +355,7 @@ describe("EventReplayer", () => {
       authorizationServiceAfter,
       settlementServiceAfter,
       reversalServiceAfter,
+      overdraftFeeServiceAfter,
     );
 
     replayerAfter.replay([
@@ -373,7 +393,10 @@ describe("EventReplayer", () => {
       },
     ]);
 
-    assert.equal(ledgerAfterReversal.balanceAt(account, 2).minorUnits, 25000n);
+    assert.equal(
+    ledgerAfterReversal.balanceAt(account, 2).minorUnits,
+    25000n,
+    );
 
     const entries = ledgerAfterReversal.entriesForAccount("ACC-001");
 
@@ -401,6 +424,7 @@ describe("EventReplayer", () => {
     );
 
     const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -408,6 +432,7 @@ describe("EventReplayer", () => {
       authorizationService,
       settlementService,
       reversalService,
+      overdraftFeeService,
     );
 
     replayer.replay([
@@ -430,4 +455,137 @@ describe("EventReplayer", () => {
     assert.equal(entries[0]?.valueDate, 5);
     assert.equal(entries[0]?.sourceEventId, "E10-1");
   });
+
+  it("assesses an overdraft fee for the backdated value date", () => {
+    const ledger = new Ledger();
+    const authorizationService = new AuthorizationService();
+
+    const settlementService = new SettlementService(
+      authorizationService,
+      ledger,
+    );
+
+    const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
+
+    const replayer = new EventReplayer(
+      ledger,
+      [account],
+      authorizationService,
+      settlementService,
+      reversalService,
+      overdraftFeeService,
+    );
+
+    replayer.replay([
+      {
+        id: "E1",
+        bookDay: 1,
+        valueDate: 1,
+        accountId: "ACC-001",
+        type: "CREDIT",
+        amount: money("AED", 120000n),
+      },
+      {
+        id: "E2",
+        bookDay: 1,
+        valueDate: 1,
+        accountId: "ACC-001",
+        type: "DEBIT",
+        amount: money("AED", 95000n),
+      },
+      {
+        id: "E7",
+        bookDay: 5,
+        valueDate: 2,
+        accountId: "ACC-001",
+        type: "DEBIT",
+        amount: money("AED", 62000n),
+      },
+    ]);
+
+    const entries = ledger.entriesForAccount("ACC-001");
+
+    const fee = entries.find((entry) => entry.type === "OVERDRAFT_FEE");
+
+    assert.ok(fee);
+
+    assert.equal(fee.valueDate, 2);
+    assert.equal(fee.amount.minorUnits, -2500n);
+
+    assert.equal(ledger.balanceAt(account, 2).minorUnits, -39500n);
+
+    assert.equal(ledger.balanceAt(account, 5).minorUnits, -39500n);
+
+    assert.equal(
+      entries.filter((entry) => entry.type === "OVERDRAFT_FEE").length,
+      1,
+    );
+  });
+
+
+  it("assesses at most one overdraft fee per account per value date", () => {
+  const ledger = new Ledger();
+  const authorizationService = new AuthorizationService();
+  const settlementService = new SettlementService(
+    authorizationService,
+    ledger,
+  );
+  const reversalService = new ReversalService(ledger);
+  const overdraftFeeService = new OverdraftFeeService(ledger);
+
+  const replayer = new EventReplayer(
+    ledger,
+    [account],
+    authorizationService,
+    settlementService,
+    reversalService,
+    overdraftFeeService,
+  );
+
+  replayer.replay([
+    {
+      id: "E1",
+      bookDay: 1,
+      valueDate: 1,
+      accountId: "ACC-001",
+      type: "CREDIT",
+      amount: money("AED", 120000n),
+    },
+    {
+      id: "E2",
+      bookDay: 1,
+      valueDate: 1,
+      accountId: "ACC-001",
+      type: "DEBIT",
+      amount: money("AED", 95000n),
+    },
+    {
+      id: "E7",
+      bookDay: 5,
+      valueDate: 2,
+      accountId: "ACC-001",
+      type: "DEBIT",
+      amount: money("AED", 62000n),
+    },
+    {
+      id: "E8",
+      bookDay: 5,
+      valueDate: 2,
+      accountId: "ACC-001",
+      type: "DEBIT",
+      amount: money("AED", 10000n),
+    },
+  ]);
+
+  const fees = ledger
+    .entriesForAccount("ACC-001")
+    .filter((entry) => entry.type === "OVERDRAFT_FEE");
+
+  assert.equal(fees.length, 1);
+  assert.equal(fees[0]?.valueDate, 2);
+  assert.equal(fees[0]?.amount.minorUnits, -2500n);
+});
+
+
 });
