@@ -822,4 +822,90 @@ describe("EventReplayer", () => {
 );
 });
 
+
+
+it("returns authorization, settlement, and error results", () => {
+  const ledger = new Ledger();
+  const authorizationService = new AuthorizationService();
+  const settlementService = new SettlementService(
+    authorizationService,
+    ledger,
+  );
+  const reversalService = new ReversalService(ledger);
+  const overdraftFeeService = new OverdraftFeeService(ledger);
+  const interestService = new InterestService();
+  const interestCapitalizer = new InterestCapitalizer(ledger);
+
+  const replayer = new EventReplayer(
+    ledger,
+    [account],
+    authorizationService,
+    settlementService,
+    reversalService,
+    overdraftFeeService,
+    interestService,
+    interestCapitalizer,
+  );
+
+  const result = replayer.replay(
+    [
+      {
+        id: "E1",
+        bookDay: 1,
+        valueDate: 1,
+        accountId: "ACC-001",
+        type: "CREDIT",
+        amount: money("AED", 120000n),
+      },
+      {
+        id: "E2",
+        bookDay: 1,
+        valueDate: 1,
+        accountId: "ACC-001",
+        type: "DEBIT",
+        amount: money("AED", 95000n),
+      },
+      {
+        id: "E3",
+        bookDay: 2,
+        valueDate: 2,
+        accountId: "ACC-001",
+        type: "AUTHORIZATION",
+        authorizationId: "Auth-A",
+        holdAmount: money("AED", 20000n),
+      },
+      {
+        id: "E5",
+        bookDay: 4,
+        valueDate: 4,
+        accountId: "ACC-001",
+        type: "SETTLEMENT",
+        authorizationId: "Auth-A",
+        settlementAmount: money("AED", 18500n),
+      },
+      {
+        id: "E6",
+        bookDay: 4,
+        valueDate: 4,
+        accountId: "ACC-001",
+        type: "SETTLEMENT",
+        authorizationId: "Auth-Z",
+        settlementAmount: money("AED", 18000n),
+      },
+    ],
+    [1, 2, 4],
+  );
+
+  assert.equal(result.authorizations.length, 1);
+  assert.equal(result.authorizations[0]?.id, "Auth-A");
+  assert.equal(result.authorizations[0]?.status, "SETTLED");
+
+  assert.equal(result.settlements.length, 2);
+  assert.equal(result.settlements[0]?.status, "SETTLED");
+  assert.equal(result.settlements[1]?.status, "FAILED");
+
+  assert.equal(result.errors.length, 1);
+  assert.equal(result.errors[0]?.eventId, "E6");
+});
+
 });

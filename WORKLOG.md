@@ -165,9 +165,16 @@
 - Added formatting for daily interest accruals.
 - Added reporter test coverage. 
 
-## 2026-09-13 [ACTUAL TIME] +0400
+## 2026-09-13 16:16:05 +0400
 
 - Wired the runnable assessment flow with event replay, daily state calculation, and reporting.
 - Added Day 1–Day 6 output for both accounts.
 - Clarified Day 6 interest accrual to use the pre-capitalization balance while the closing balance includes capitalization.
 - Added regression coverage for the Day 6 interest basis.
+
+
+## 2026-09-13 16:40:42 +0400
+
+- Added replay result reporting for authorization states and settlement errors.
+- Wired authorization and error reporting into the runnable assessment output.
+- Verified the complete Day 1–Day 6 assessment output for both accounts.

@@ -1,4 +1,5 @@
 import type { DailyAccountState } from "../domain/daily-account-state.js";
+import type { ReplayResult } from "../domain/replay-result.js";
 
 export class Reporter {
   reportDailyStates(states: readonly DailyAccountState[]): string {
@@ -15,6 +16,30 @@ export class Reporter {
       .join("\n\n");
   }
 
+
+  reportReplayResults(result: ReplayResult): string {
+    const authorizations = result.authorizations.length
+      ? result.authorizations.map(
+          (authorization) =>
+            `  ${authorization.id}: ${authorization.status}`,
+        )
+      : ["  None"];
+
+    const errors = result.errors.length
+      ? result.errors.map(
+          (error) => `  ${error.eventId}: ${error.message}`,
+        )
+      : ["  None"];
+
+    return [
+      "Authorization States",
+      ...authorizations,
+      "",
+      "Errors",
+      ...errors,
+    ].join("\n");
+  }
+  
   private formatAmount(money: DailyAccountState["closingLedgerBalance"]): string {
     const scale = money.currency === "AED" ? 100n : 1000n;
     const absoluteMinorUnits =

@@ -7,6 +7,9 @@ import type { InterestService } from "../interest/interest.js";
 import type { Ledger } from "../ledger/ledger.js";
 import type { ReversalService } from "../reversal/reversal.js";
 import type { SettlementService } from "../settlement/settlement.js";
+import type { ReplayError } from "../domain/replay-result.js";
+import type { ReplayResult } from "../domain/replay-result.js";
+import type { Settlement } from "../domain/settlement.js";
 
 export class EventReplayer {
   constructor(
@@ -66,24 +69,39 @@ export class EventReplayer {
     }
   }
 
-  replay(events: readonly LedgerEvent[], days: readonly number[]): void {
-    const orderedEvents = [...events].sort((a, b) => a.bookDay - b.bookDay);
+  replay(
+    events: readonly LedgerEvent[],
+    days: readonly number[],
+  ): ReplayResult {
+    const settlements: Settlement[] = [];
 
+    const orderedEvents = [...events].sort((a, b) => a.bookDay - b.bookDay);
+    const errors: ReplayError[] = [];
     for (const event of orderedEvents) {
-      this.process(event);
+      this.process(event, errors, settlements);
     }
 
     this.assessOverdraftFees(orderedEvents);
     if (days.includes(6)) {
       this.capitalizeInterest(days);
     }
+
+    return {
+      authorizations: this.authorizationService.all(),
+      settlements,
+      errors,
+    };
   }
 
   private accountFor(accountId: string): Account | undefined {
     return this.accounts.find((account) => account.id === accountId);
   }
 
-  private process(event: LedgerEvent): void {
+  private process(
+    event: LedgerEvent,
+    errors: ReplayError[],
+    settlements: Settlement[],
+  ): void {
     switch (event.type) {
       case "CREDIT":
         this.ledgerService.append({
@@ -132,13 +150,22 @@ export class EventReplayer {
         break;
 
       case "SETTLEMENT":
-        this.settlementService.settle(
+        const settlement = this.settlementService.settle(
           event.id,
           event.authorizationId,
           event.accountId,
           event.settlementAmount,
           event.valueDate,
         );
+
+        settlements.push(settlement);
+
+        if (settlement.status === "FAILED") {
+          errors.push({
+            eventId: event.id,
+            message: `Settlement failed for authorization ${event.authorizationId}`,
+          });
+        }
         break;
 
       case "REVERSAL":

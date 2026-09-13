@@ -164,7 +164,8 @@ const eventReplayer = new EventReplayer(
   interestCapitalizer,
 );
 
-eventReplayer.replay(events, days);
+ 
+const replayResult = eventReplayer.replay(events, days);
 
 const dailyStateCalculator = new DailyAccountStateCalculator(
   ledger,
@@ -180,6 +181,8 @@ for (const account of accounts) {
   console.log(`\nAccount: ${account.id}`);
   console.log(reporter.reportDailyStates(states));
 }
+
+console.log("\n" + reporter.reportReplayResults(replayResult));
 
 
 console.log("Event replay completed.");
