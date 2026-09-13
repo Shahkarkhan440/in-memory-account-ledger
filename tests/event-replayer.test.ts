@@ -8,6 +8,8 @@ import { Ledger } from "../src/ledger/ledger.js";
 import { SettlementService } from "../src/settlement/settlement.js";
 import { ReversalService } from "../src/reversal/reversal.js";
 import { OverdraftFeeService } from "../src/fees/overdraft-fee.js";
+import { InterestService } from "../src/interest/interest.js";
+import { InterestCapitalizer } from "../src/interest/interest-capitalizer.js";
 
 const account = {
   id: "ACC-001",
@@ -25,6 +27,8 @@ describe("EventReplayer", () => {
     );
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -33,26 +37,31 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 120000n),
-      },
-      {
-        id: "E2",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 95000n),
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+      ],
+      [1],
+    );
 
     const entries = ledger.entriesForAccount("ACC-001");
 
@@ -76,6 +85,8 @@ describe("EventReplayer", () => {
     );
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -84,26 +95,31 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E2",
-        bookDay: 2,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 10000n),
-      },
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 20000n),
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E2",
+          bookDay: 2,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 10000n),
+        },
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 20000n),
+        },
+      ],
+      [1, 2],
+    );
 
     const entries = ledger.entriesForAccount("ACC-001");
 
@@ -120,6 +136,8 @@ describe("EventReplayer", () => {
     );
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -128,35 +146,40 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 120000n),
-      },
-      {
-        id: "E2",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 95000n),
-      },
-      {
-        id: "E3",
-        bookDay: 2,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "AUTHORIZATION",
-        authorizationId: "Auth-A",
-        holdAmount: money("AED", 20000n),
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+        {
+          id: "E3",
+          bookDay: 2,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "AUTHORIZATION",
+          authorizationId: "Auth-A",
+          holdAmount: money("AED", 20000n),
+        },
+      ],
+      [1, 2],
+    );
 
     const authorization = authorizationService.get("Auth-A");
 
@@ -180,6 +203,8 @@ describe("EventReplayer", () => {
 
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -188,44 +213,49 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 120000n),
-      },
-      {
-        id: "E2",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 95000n),
-      },
-      {
-        id: "E3",
-        bookDay: 2,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "AUTHORIZATION",
-        authorizationId: "Auth-A",
-        holdAmount: money("AED", 20000n),
-      },
-      {
-        id: "E4",
-        bookDay: 4,
-        valueDate: 4,
-        accountId: "ACC-001",
-        type: "SETTLEMENT",
-        authorizationId: "Auth-A",
-        settlementAmount: money("AED", 18500n),
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+        {
+          id: "E3",
+          bookDay: 2,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "AUTHORIZATION",
+          authorizationId: "Auth-A",
+          holdAmount: money("AED", 20000n),
+        },
+        {
+          id: "E4",
+          bookDay: 4,
+          valueDate: 4,
+          accountId: "ACC-001",
+          type: "SETTLEMENT",
+          authorizationId: "Auth-A",
+          settlementAmount: money("AED", 18500n),
+        },
+      ],
+      [1, 2, 4],
+    );
 
     const authorization = authorizationService.get("Auth-A");
 
@@ -254,6 +284,8 @@ describe("EventReplayer", () => {
 
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -262,19 +294,24 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E6",
-        bookDay: 4,
-        valueDate: 4,
-        accountId: "ACC-001",
-        type: "SETTLEMENT",
-        authorizationId: "Auth-Z",
-        settlementAmount: money("AED", 18000n),
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E6",
+          bookDay: 4,
+          valueDate: 4,
+          accountId: "ACC-001",
+          type: "SETTLEMENT",
+          authorizationId: "Auth-Z",
+          settlementAmount: money("AED", 18000n),
+        },
+      ],
+      [4],
+    );
 
     const entries = ledger.entriesForAccount("ACC-001");
 
@@ -297,6 +334,11 @@ describe("EventReplayer", () => {
       ledgerBeforeReversal,
     );
 
+    const interestServiceBefore = new InterestService();
+    const interestCapitalizerBefore = new InterestCapitalizer(
+      ledgerBeforeReversal,
+    );
+
     const replayerBefore = new EventReplayer(
       ledgerBeforeReversal,
       [account],
@@ -304,34 +346,39 @@ describe("EventReplayer", () => {
       settlementServiceBefore,
       reversalServiceBefore,
       overdraftFeeServiceBefore,
+      interestServiceBefore,
+      interestCapitalizerBefore,
     );
 
-    replayerBefore.replay([
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 120000n),
-      },
-      {
-        id: "E2",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 95000n),
-      },
-      {
-        id: "E7",
-        bookDay: 5,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 62000n),
-      },
-    ]);
+    replayerBefore.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+        {
+          id: "E7",
+          bookDay: 5,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 62000n),
+        },
+      ],
+      [1, 2],
+    );
 
     assert.equal(
       ledgerBeforeReversal.balanceAt(account, 2).minorUnits,
@@ -349,6 +396,11 @@ describe("EventReplayer", () => {
       ledgerAfterReversal,
     );
 
+    const interestServiceAfter = new InterestService();
+    const interestCapitalizerAfter = new InterestCapitalizer(
+      ledgerAfterReversal,
+    );
+
     const replayerAfter = new EventReplayer(
       ledgerAfterReversal,
       [account],
@@ -356,47 +408,49 @@ describe("EventReplayer", () => {
       settlementServiceAfter,
       reversalServiceAfter,
       overdraftFeeServiceAfter,
+      interestServiceAfter,
+      interestCapitalizerAfter,
     );
 
-    replayerAfter.replay([
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 120000n),
-      },
-      {
-        id: "E2",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 95000n),
-      },
-      {
-        id: "E7",
-        bookDay: 5,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 62000n),
-      },
-      {
-        id: "E9",
-        bookDay: 6,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "REVERSAL",
-        reversesEventId: "E7",
-      },
-    ]);
-
-    assert.equal(
-    ledgerAfterReversal.balanceAt(account, 2).minorUnits,
-    25000n,
+    replayerAfter.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+        {
+          id: "E7",
+          bookDay: 5,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 62000n),
+        },
+        {
+          id: "E9",
+          bookDay: 6,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "REVERSAL",
+          reversesEventId: "E7",
+        },
+      ],
+      [1, 2],
     );
+
+    assert.equal(ledgerAfterReversal.balanceAt(account, 2).minorUnits, 25000n);
 
     const entries = ledgerAfterReversal.entriesForAccount("ACC-001");
 
@@ -425,6 +479,8 @@ describe("EventReplayer", () => {
 
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -433,19 +489,24 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E10-1",
-        bookDay: 5,
-        valueDate: 5,
-        accountId: "ACC-001",
-        type: "INSTALLEMENT_CREDIT",
-        amount: money("AED", 333n),
-        installmentNumber: 1,
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E10-1",
+          bookDay: 5,
+          valueDate: 5,
+          accountId: "ACC-001",
+          type: "INSTALLEMENT_CREDIT",
+          amount: money("AED", 333n),
+          installmentNumber: 1,
+        },
+      ],
+      [5],
+    );
 
     const entries = ledger.entriesForAccount("ACC-001");
 
@@ -467,6 +528,8 @@ describe("EventReplayer", () => {
 
     const reversalService = new ReversalService(ledger);
     const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
 
     const replayer = new EventReplayer(
       ledger,
@@ -475,34 +538,39 @@ describe("EventReplayer", () => {
       settlementService,
       reversalService,
       overdraftFeeService,
+      interestService,
+      interestCapitalizer,
     );
 
-    replayer.replay([
-      {
-        id: "E1",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "CREDIT",
-        amount: money("AED", 120000n),
-      },
-      {
-        id: "E2",
-        bookDay: 1,
-        valueDate: 1,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 95000n),
-      },
-      {
-        id: "E7",
-        bookDay: 5,
-        valueDate: 2,
-        accountId: "ACC-001",
-        type: "DEBIT",
-        amount: money("AED", 62000n),
-      },
-    ]);
+    replayer.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+        {
+          id: "E7",
+          bookDay: 5,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 62000n),
+        },
+      ],
+      [1, 2],
+    );
 
     const entries = ledger.entriesForAccount("ACC-001");
 
@@ -523,16 +591,145 @@ describe("EventReplayer", () => {
     );
   });
 
-
   it("assesses at most one overdraft fee per account per value date", () => {
+    const ledger = new Ledger();
+    const authorizationService = new AuthorizationService();
+    const settlementService = new SettlementService(
+      authorizationService,
+      ledger,
+    );
+    const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
+
+    const replayer = new EventReplayer(
+      ledger,
+      [account],
+      authorizationService,
+      settlementService,
+      reversalService,
+      overdraftFeeService,
+      interestService,
+      interestCapitalizer,
+    );
+
+    replayer.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 120000n),
+        },
+        {
+          id: "E2",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 95000n),
+        },
+        {
+          id: "E7",
+          bookDay: 5,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 62000n),
+        },
+        {
+          id: "E8",
+          bookDay: 5,
+          valueDate: 2,
+          accountId: "ACC-001",
+          type: "DEBIT",
+          amount: money("AED", 10000n),
+        },
+      ],
+      [1, 2],
+    );
+
+    const fees = ledger
+      .entriesForAccount("ACC-001")
+      .filter((entry) => entry.type === "OVERDRAFT_FEE");
+
+    assert.equal(fees.length, 1);
+    assert.equal(fees[0]?.valueDate, 2);
+    assert.equal(fees[0]?.amount.minorUnits, -2500n);
+  });
+
+  it("capitalizes rounded daily interest as one Day 6 ledger credit", () => {
+    const ledger = new Ledger();
+    const authorizationService = new AuthorizationService();
+
+    const settlementService = new SettlementService(
+      authorizationService,
+      ledger,
+    );
+
+    const reversalService = new ReversalService(ledger);
+    const overdraftFeeService = new OverdraftFeeService(ledger);
+    const interestService = new InterestService();
+    const interestCapitalizer = new InterestCapitalizer(ledger);
+
+    const replayer = new EventReplayer(
+      ledger,
+      [account],
+      authorizationService,
+      settlementService,
+      reversalService,
+      overdraftFeeService,
+      interestService,
+      interestCapitalizer,
+    );
+
+    replayer.replay(
+      [
+        {
+          id: "E1",
+          bookDay: 1,
+          valueDate: 1,
+          accountId: "ACC-001",
+          type: "CREDIT",
+          amount: money("AED", 25000n),
+        },
+      ],
+      [1, 2, 3, 4, 5, 6],
+    );
+
+    const entries = ledger.entriesForAccount("ACC-001");
+
+    const interestEntries = entries.filter(
+      (entry) => entry.type === "INTEREST_CAPITALIZATION",
+    );
+
+    assert.equal(interestEntries.length, 1);
+
+    assert.equal(interestEntries[0]?.valueDate, 6);
+
+    assert.equal(interestEntries[0]?.amount.minorUnits, 60n);
+
+    assert.equal(ledger.balanceAt(account, 6).minorUnits, 25060n);
+  });
+
+
+
+  it("capitalizes interest from the final replayed daily balances", () => {
   const ledger = new Ledger();
   const authorizationService = new AuthorizationService();
+
   const settlementService = new SettlementService(
     authorizationService,
     ledger,
   );
+
   const reversalService = new ReversalService(ledger);
   const overdraftFeeService = new OverdraftFeeService(ledger);
+  const interestService = new InterestService();
+  const interestCapitalizer = new InterestCapitalizer(ledger);
 
   const replayer = new EventReplayer(
     ledger,
@@ -541,51 +738,88 @@ describe("EventReplayer", () => {
     settlementService,
     reversalService,
     overdraftFeeService,
+    interestService,
+    interestCapitalizer,
   );
 
-  replayer.replay([
-    {
-      id: "E1",
-      bookDay: 1,
-      valueDate: 1,
-      accountId: "ACC-001",
-      type: "CREDIT",
-      amount: money("AED", 120000n),
-    },
-    {
-      id: "E2",
-      bookDay: 1,
-      valueDate: 1,
-      accountId: "ACC-001",
-      type: "DEBIT",
-      amount: money("AED", 95000n),
-    },
-    {
-      id: "E7",
-      bookDay: 5,
-      valueDate: 2,
-      accountId: "ACC-001",
-      type: "DEBIT",
-      amount: money("AED", 62000n),
-    },
-    {
-      id: "E8",
-      bookDay: 5,
-      valueDate: 2,
-      accountId: "ACC-001",
-      type: "DEBIT",
-      amount: money("AED", 10000n),
-    },
-  ]);
+  replayer.replay(
+    [
+      {
+        id: "E1",
+        bookDay: 1,
+        valueDate: 1,
+        accountId: "ACC-001",
+        type: "CREDIT",
+        amount: money("AED", 120000n),
+      },
+      {
+        id: "E2",
+        bookDay: 1,
+        valueDate: 1,
+        accountId: "ACC-001",
+        type: "DEBIT",
+        amount: money("AED", 95000n),
+      },
+      {
+        id: "E3",
+        bookDay: 2,
+        valueDate: 2,
+        accountId: "ACC-001",
+        type: "AUTHORIZATION",
+        authorizationId: "Auth-A",
+        holdAmount: money("AED", 20000n),
+      },
+      {
+        id: "E4",
+        bookDay: 3,
+        valueDate: 3,
+        accountId: "ACC-001",
+        type: "CREDIT",
+        amount: money("AED", 40000n),
+      },
+      {
+        id: "E5",
+        bookDay: 4,
+        valueDate: 4,
+        accountId: "ACC-001",
+        type: "SETTLEMENT",
+        authorizationId: "Auth-A",
+        settlementAmount: money("AED", 18500n),
+      },
+      {
+        id: "E7",
+        bookDay: 5,
+        valueDate: 2,
+        accountId: "ACC-001",
+        type: "DEBIT",
+        amount: money("AED", 62000n),
+      },
+      {
+        id: "E9",
+        bookDay: 6,
+        valueDate: 2,
+        accountId: "ACC-001",
+        type: "REVERSAL",
+        reversesEventId: "E7",
+      },
+    ],
+    [1, 2, 3, 4, 5, 6],
+  );
 
-  const fees = ledger
-    .entriesForAccount("ACC-001")
-    .filter((entry) => entry.type === "OVERDRAFT_FEE");
+  const entries = ledger.entriesForAccount("ACC-001");
 
-  assert.equal(fees.length, 1);
-  assert.equal(fees[0]?.valueDate, 2);
-  assert.equal(fees[0]?.amount.minorUnits, -2500n);
+  const capitalizationEntries = entries.filter(
+    (entry) => entry.type === "INTEREST_CAPITALIZATION",
+  );
+
+  assert.equal(capitalizationEntries.length, 1);
+  assert.equal(capitalizationEntries[0]?.valueDate, 6);
+  assert.equal(capitalizationEntries[0]?.amount.minorUnits, 103n);
+
+  assert.equal(
+  ledger.balanceAt(account, 6).minorUnits,
+  46603n,
+);
 });
-
 
 });

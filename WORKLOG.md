@@ -148,3 +148,11 @@
 - Preserved the existing currency precision and half-up rounding rules from InterestService.
 - Added a DailyAccountState test verifying the calculated daily interest accrual.
 
+
+## 2026-09-13 15:52:22 +0400
+
+- Integrated Day 6 interest capitalization into event replay.
+- Calculated daily interest from the final replayed closing ledger balances.
+- Capitalized the sum of the already-rounded daily accruals as a single Day 6 ledger credit.
+- Added integration coverage for the complete backdated replay and interest capitalization flow.
+- Verified that no capitalization occurs when the replay period does not include Day 6. 

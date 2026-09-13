@@ -2,6 +2,8 @@ import type { AuthorizationService } from "../authorization/authorization.js";
 import type { Account } from "../domain/account.js";
 import type { LedgerEvent } from "../domain/event.js";
 import type { OverdraftFeeService } from "../fees/overdraft-fee.js";
+import type { InterestCapitalizer } from "../interest/interest-capitalizer.js";
+import type { InterestService } from "../interest/interest.js";
 import type { Ledger } from "../ledger/ledger.js";
 import type { ReversalService } from "../reversal/reversal.js";
 import type { SettlementService } from "../settlement/settlement.js";
@@ -14,6 +16,8 @@ export class EventReplayer {
     private readonly settlementService: SettlementService,
     private readonly reversalService: ReversalService,
     private readonly overdraftFeeService: OverdraftFeeService,
+    private readonly interestService: InterestService,
+    private readonly interestCapitalizer: InterestCapitalizer,
   ) {}
 
   private assessOverdraftFees(events: readonly LedgerEvent[]): void {
@@ -33,7 +37,36 @@ export class EventReplayer {
     }
   }
 
-  replay(events: readonly LedgerEvent[]): void {
+  private capitalizeInterest(days: readonly number[]): void {
+    const accruals = this.accounts.flatMap((account) =>
+      days.map((day) => {
+        const closingBalance = this.ledgerService.balanceAt(account, day);
+
+        return this.interestService.calculateDailyAccrual(
+          account,
+          day,
+          closingBalance,
+        );
+      }),
+    );
+
+    const capitalizationDay = days[days.length - 1];
+
+    if (capitalizationDay === undefined) {
+      return;
+    }
+
+    for (const account of this.accounts) {
+      this.interestCapitalizer.capitalize(
+        `INT-${account.id}-D${capitalizationDay}`,
+        account,
+        accruals,
+        capitalizationDay,
+      );
+    }
+  }
+
+  replay(events: readonly LedgerEvent[], days: readonly number[]): void {
     const orderedEvents = [...events].sort((a, b) => a.bookDay - b.bookDay);
 
     for (const event of orderedEvents) {
@@ -41,6 +74,9 @@ export class EventReplayer {
     }
 
     this.assessOverdraftFees(orderedEvents);
+    if (days.includes(6)) {
+      this.capitalizeInterest(days);
+    }
   }
 
   private accountFor(accountId: string): Account | undefined {
@@ -90,7 +126,7 @@ export class EventReplayer {
           event.accountId,
           ledgerBalance,
           event.holdAmount,
-            event.valueDate,
+          event.valueDate,
         );
 
         break;
