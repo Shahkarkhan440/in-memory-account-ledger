@@ -113,3 +113,19 @@ Decision:
 - Assess the fee only if that final closing balance is negative.
 - A maximum of one overdraft fee is assessed per account per day.
 - A backdated reversal can therefore remove the condition that would otherwise have caused an overdraft fee.
+
+
+## Authorization and settlement dates
+
+The specification provides event booked day and value date, but the
+authorization domain state also needs to preserve when a hold became
+active and when it was released.
+
+Decision:
+
+- An authorization stores its valueDate.
+- The authorization hold becomes active from its value date.
+- A settled authorization stores its settlementValueDate.
+- The hold remains active for days after the authorization value date and before the settlement value date.
+- On the settlement value date, the hold is considered released.
+- Historical daily account state uses these dates rather than only the authorization current status.

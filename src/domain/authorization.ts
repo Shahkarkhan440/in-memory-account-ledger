@@ -10,5 +10,7 @@ export interface Authorization {
   readonly accountId: string;
   readonly holdAmount: Money;
   readonly status: AuthorizationStatus;
+  readonly valueDate: number;
   readonly settlementAmount?: Money;
+  readonly settlementValueDate?: number;
 }

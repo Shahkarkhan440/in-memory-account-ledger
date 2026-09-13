@@ -90,6 +90,7 @@ export class EventReplayer {
           event.accountId,
           ledgerBalance,
           event.holdAmount,
+            event.valueDate,
         );
 
         break;

@@ -122,3 +122,13 @@
 - Added the DailyAccountState calculator.
 - Implemented daily closing ledger balance calculation using value dates.
 - Added a DailyAccountState test covering closing balances across multiple value dates.
+
+## 2026-09-13 15:04:28 +0400
+
+- Added value-date tracking to authorization state.
+- Added settlement value-date tracking to preserve historical authorization lifecycle.
+- Updated settlement and authorization tests for date-aware behavior.
+- Extended DailyAccountState calculation to include historical active holds.
+- Calculated available balance as closing ledger balance minus active holds.
+- Added tests covering authorization activation and hold release after settlement.
+

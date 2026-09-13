@@ -15,6 +15,7 @@ export class AuthorizationService {
     accountId: string,
     ledgerBalance: Money,
     amount: Money,
+    valueDate: number,
   ): Authorization {
     const currentHolds = [...this.authorizations.values()]
       .filter(
@@ -38,6 +39,7 @@ export class AuthorizationService {
         accountId,
         holdAmount: amount,
         status: "DECLINED",
+        valueDate,
       };
       this.authorizations.set(authorizationId, authorization);
       return authorization;
@@ -48,6 +50,7 @@ export class AuthorizationService {
       accountId,
       holdAmount: amount,
       status: "APPROVED",
+        valueDate,
     };
     this.authorizations.set(authorizationId, authorization);
     return authorization;
@@ -74,7 +77,7 @@ export class AuthorizationService {
   }
 
   //settlement
-  markSettled(authorizationId: string, settlementAmount: Money): boolean {
+  markSettled(authorizationId: string, settlementAmount: Money,   settlementValueDate: number): boolean {
     const authorization = this.authorizations.get(authorizationId);
 
     if (!authorization || authorization.status !== "APPROVED") {
@@ -85,8 +88,13 @@ export class AuthorizationService {
       ...authorization,
       status: "SETTLED",
       settlementAmount,
+      settlementValueDate,
     });
 
     return true;
+  }
+
+  all(): readonly Authorization[] {
+    return [...this.authorizations.values()];
   }
 }

@@ -10,16 +10,14 @@ describe("SettlementService", () => {
   it("settles an approved authorization with a lower amount", () => {
     const authorizationService = new AuthorizationService();
     const ledger = new Ledger();
-    const service = new SettlementService(
-      authorizationService,
-      ledger,
-    );
+    const service = new SettlementService(authorizationService, ledger);
 
     authorizationService.authorize(
       "Auth-A",
       "ACC-001",
       money("AED", 25000n),
       money("AED", 20000n),
+      2,
     );
 
     const result = service.settle(
@@ -37,10 +35,7 @@ describe("SettlementService", () => {
     const authorization = authorizationService.get("Auth-A");
 
     assert.equal(authorization?.status, "SETTLED");
-    assert.equal(
-      authorization?.settlementAmount?.minorUnits,
-      18500n,
-    );
+    assert.equal(authorization?.settlementAmount?.minorUnits, 18500n);
 
     assert.equal(
       authorizationService.activeHoldsForAccount("ACC-001"),
@@ -57,10 +52,7 @@ describe("SettlementService", () => {
   it("fails settlement for an unknown authorization", () => {
     const authorizationService = new AuthorizationService();
     const ledger = new Ledger();
-    const service = new SettlementService(
-      authorizationService,
-      ledger,
-    );
+    const service = new SettlementService(authorizationService, ledger);
 
     const result = service.settle(
       "S1",
@@ -73,25 +65,20 @@ describe("SettlementService", () => {
     assert.equal(result.status, "FAILED");
     assert.equal(result.holdAmount, undefined);
 
-    assert.equal(
-      ledger.entriesForAccount("ACC-001").length,
-      0,
-    );
+    assert.equal(ledger.entriesForAccount("ACC-001").length, 0);
   });
 
   it("fails settlement when amount exceeds the hold", () => {
     const authorizationService = new AuthorizationService();
     const ledger = new Ledger();
-    const service = new SettlementService(
-      authorizationService,
-      ledger,
-    );
+    const service = new SettlementService(authorizationService, ledger);
 
     authorizationService.authorize(
       "Auth-A",
       "ACC-001",
       money("AED", 30000n),
       money("AED", 20000n),
+      2,
     );
 
     const result = service.settle(
@@ -111,30 +98,22 @@ describe("SettlementService", () => {
       20000n,
     );
 
-    assert.equal(
-      authorizationService.get("Auth-A")?.status,
-      "APPROVED",
-    );
+    assert.equal(authorizationService.get("Auth-A")?.status, "APPROVED");
 
-    assert.equal(
-      ledger.entriesForAccount("ACC-001").length,
-      0,
-    );
+    assert.equal(ledger.entriesForAccount("ACC-001").length, 0);
   });
 
   it("fails settlement when authorization belongs to another account", () => {
     const authorizationService = new AuthorizationService();
     const ledger = new Ledger();
-    const service = new SettlementService(
-      authorizationService,
-      ledger,
-    );
+    const service = new SettlementService(authorizationService, ledger);
 
     authorizationService.authorize(
       "Auth-A",
       "ACC-001",
       money("AED", 30000n),
       money("AED", 20000n),
+      2,
     );
 
     const result = service.settle(
@@ -147,24 +126,15 @@ describe("SettlementService", () => {
 
     assert.equal(result.status, "FAILED");
 
-    assert.equal(
-      authorizationService.get("Auth-A")?.status,
-      "APPROVED",
-    );
+    assert.equal(authorizationService.get("Auth-A")?.status, "APPROVED");
 
     assert.equal(
       authorizationService.activeHoldsForAccount("ACC-001")?.minorUnits,
       20000n,
     );
 
-    assert.equal(
-      ledger.entriesForAccount("ACC-001").length,
-      0,
-    );
+    assert.equal(ledger.entriesForAccount("ACC-001").length, 0);
 
-    assert.equal(
-      ledger.entriesForAccount("ACC-002").length,
-      0,
-    );
+    assert.equal(ledger.entriesForAccount("ACC-002").length, 0);
   });
 });

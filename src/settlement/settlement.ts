@@ -43,7 +43,7 @@ export class SettlementService {
       };
     }
 
-    this.authorizationService.markSettled(authorizationId, amount);
+    this.authorizationService.markSettled(authorizationId, amount,valueDate);
 
     this.ledgerService.append({
       id: settlementId,

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import test, { describe } from "node:test";
-
 import { money } from "../src/domain/money.js";
 import { DailyAccountStateCalculator } from "../src/account-daily-state/daily-account-state-calculator.js";
 import { Ledger } from "../src/ledger/ledger.js";
+import { AuthorizationService } from "../src/authorization/authorization.js";
+import { describe, it } from "node:test";
 
 const account = {
   id: "ACC-001",
@@ -12,7 +12,7 @@ const account = {
 };
 
 describe("DailyAccountState", () => {
-  test("calculates the closing ledger balance for each requested value date", () => {
+  it("calculates the closing ledger balance for each requested value date", () => {
     const ledger = new Ledger();
 
     ledger.append({
@@ -42,25 +42,97 @@ describe("DailyAccountState", () => {
       sourceEventId: "E3",
     });
 
-    const calculator = new DailyAccountStateCalculator(ledger);
+    const authorizationService = new AuthorizationService();
+    const calculator = new DailyAccountStateCalculator(
+      ledger,
+      authorizationService,
+    );
 
     const states = calculator.calculate(account, [1, 2, 3]);
 
     assert.equal(states.length, 3);
 
-    assert.equal(
-      states[0]?.closingLedgerBalance.minorUnits,
-      25000n,
+    assert.equal(states[0]?.closingLedgerBalance.minorUnits, 25000n);
+
+    assert.equal(states[1]?.closingLedgerBalance.minorUnits, 25000n);
+
+    assert.equal(states[2]?.closingLedgerBalance.minorUnits, 65000n);
+  });
+
+  it("includes an approved authorization hold from its value date", () => {
+    const ledger = new Ledger();
+    const authorizationService = new AuthorizationService();
+    ledger.append({
+      id: "E1",
+      accountId: "ACC-001",
+      type: "CREDIT",
+      amount: money("AED", 25000n),
+      valueDate: 1,
+      sourceEventId: "E1",
+    });
+
+    authorizationService.authorize(
+      "Auth-A",
+      "ACC-001",
+      money("AED", 25000n),
+      money("AED", 20000n),
+      2,
     );
 
-    assert.equal(
-      states[1]?.closingLedgerBalance.minorUnits,
-      25000n,
+    const calculator = new DailyAccountStateCalculator(
+      ledger,
+      authorizationService,
     );
 
-    assert.equal(
-      states[2]?.closingLedgerBalance.minorUnits,
-      65000n,
+    const states = calculator.calculate(account, [1, 2, 3]);
+
+    assert.equal(states[0]?.activeHolds.minorUnits, 0n);
+    assert.equal(states[1]?.activeHolds.minorUnits, 20000n);
+    assert.equal(states[2]?.activeHolds.minorUnits, 20000n);
+
+    assert.equal(states[0]?.availableBalance.minorUnits, 25000n);
+    assert.equal(states[1]?.availableBalance.minorUnits, 5000n);
+    assert.equal(states[2]?.availableBalance.minorUnits, 5000n);
+  });
+
+  it("releases an authorization hold when the authorization is settled", () => {
+    const ledger = new Ledger();
+    const authorizationService = new AuthorizationService();
+
+    ledger.append({
+      id: "E1",
+      accountId: "ACC-001",
+      type: "CREDIT",
+      amount: money("AED", 25000n),
+      valueDate: 1,
+      sourceEventId: "E1",
+    });
+
+    authorizationService.authorize(
+      "Auth-A",
+      "ACC-001",
+      money("AED", 25000n),
+      money("AED", 20000n),
+      2,
     );
+
+    authorizationService.markSettled("Auth-A", money("AED", 18500n), 4);
+
+    const calculator = new DailyAccountStateCalculator(
+      ledger,
+      authorizationService,
+    );
+
+    const states = calculator.calculate(account, [1, 2, 3, 4]);
+
+    assert.equal(states[0]?.activeHolds.minorUnits, 0n);
+    assert.equal(states[1]?.activeHolds.minorUnits, 20000n);
+    assert.equal(states[2]?.activeHolds.minorUnits, 20000n);
+    assert.equal(states[3]?.activeHolds.minorUnits, 0n);
+
+    assert.equal(states[0]?.availableBalance.minorUnits, 25000n);
+    assert.equal(states[1]?.availableBalance.minorUnits, 5000n);
+    assert.equal(states[2]?.availableBalance.minorUnits, 5000n);
+    assert.equal(states[3]?.availableBalance.minorUnits, 25000n);
   });
 });
