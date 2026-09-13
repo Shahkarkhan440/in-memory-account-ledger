@@ -195,4 +195,41 @@ describe("DailyAccountState", () => {
     assert.equal(day1?.closingLedgerBalance.minorUnits, 25000n);
     assert.equal(day1?.interestAccrual.minorUnits, 10n);
   });
+
+  it("calculates Day 6 interest from the pre-capitalization balance", () => {
+   const ledger = new Ledger();
+    ledger.append({
+      id: "CREDIT-D6",
+      accountId: "ACC-001",
+      type: "CREDIT",
+      amount: money("AED", 100000n),
+      valueDate: 6,
+      sourceEventId: "CREDIT-D6",
+    });
+
+    ledger.append({
+      id: "INT-D6",
+      accountId: "ACC-001",
+      type: "INTEREST_CAPITALIZATION",
+      amount: money("AED", 41n),
+      valueDate: 6,
+      sourceEventId: "INT-D6",
+    });
+
+    const authorizationService = new AuthorizationService();
+    const interestService = new InterestService();
+
+    const calculator = new DailyAccountStateCalculator(
+      ledger,
+      authorizationService,
+      interestService,
+    );
+
+    const states = calculator.calculate(account, [6]);
+
+    assert.equal(states[0]?.closingLedgerBalance.minorUnits, 100041n);
+    assert.equal(states[0]?.interestAccrual.minorUnits, 40n);
+  });
+
+   
 });

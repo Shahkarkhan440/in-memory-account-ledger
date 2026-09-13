@@ -164,3 +164,10 @@
 - Added formatting for overdraft fee assessments.
 - Added formatting for daily interest accruals.
 - Added reporter test coverage. 
+
+## 2026-09-13 [ACTUAL TIME] +0400
+
+- Wired the runnable assessment flow with event replay, daily state calculation, and reporting.
+- Added Day 1–Day 6 output for both accounts.
+- Clarified Day 6 interest accrual to use the pre-capitalization balance while the closing balance includes capitalization.
+- Added regression coverage for the Day 6 interest basis.

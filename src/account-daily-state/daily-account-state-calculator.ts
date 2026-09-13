@@ -48,16 +48,40 @@ export class DailyAccountStateCalculator {
     };
   }
 
+  private balanceBeforeInterestCapitalization(
+    account: Account,
+    day: number,
+  ): Money {
+    const capitalization = this.ledgerService
+      .entriesForAccount(account.id)
+      .filter(
+        (entry) =>
+          entry.type === "INTEREST_CAPITALIZATION" && entry.valueDate === day,
+      )
+      .reduce(
+        (total, entry) => add(total, entry.amount),
+        money(account.currency, 0n),
+      );
+
+    return subtract(this.ledgerService.balanceAt(account, day), capitalization);
+  }
+
   calculate(account: Account, days: readonly number[]): DailyAccountState[] {
     return days.map((day) => {
       const closingLedgerBalance = this.ledgerService.balanceAt(account, day);
 
       const activeHolds = this.activeHoldsForDay(account, day);
       const overdraftFee = this.overdraftFeeForDay(account, day);
+
+      const interestBasisBalance =
+        day === 6
+          ? this.balanceBeforeInterestCapitalization(account, day)
+          : closingLedgerBalance;
+
       const interestAccrual = this.interestService.calculateDailyAccrual(
         account,
         day,
-        closingLedgerBalance,
+        interestBasisBalance,
       );
 
       return {
