@@ -138,3 +138,13 @@
 - Read overdraft fee information from the append-only ledger without creating or modifying ledger entries.
 - Represented the assessed overdraft fee as a positive amount in DailyAccountState while keeping the ledger fee entry negative.
 - Added a DailyAccountState test covering fee presence only on the assessed value date.
+
+
+## 2026-09-13 15:27:42 +0400
+
+- Integrated the existing InterestService into DailyAccountState calculation.
+- Daily interest accrual is now calculated from each day's closing ledger balance.
+- Positive closing balances accrue interest; zero and negative balances accrue zero.
+- Preserved the existing currency precision and half-up rounding rules from InterestService.
+- Added a DailyAccountState test verifying the calculated daily interest accrual.
+

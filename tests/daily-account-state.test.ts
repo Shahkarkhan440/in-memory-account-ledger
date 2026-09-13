@@ -4,6 +4,7 @@ import { DailyAccountStateCalculator } from "../src/account-daily-state/daily-ac
 import { Ledger } from "../src/ledger/ledger.js";
 import { AuthorizationService } from "../src/authorization/authorization.js";
 import { describe, it } from "node:test";
+import { InterestService } from "../src/interest/interest.js";
 
 const account = {
   id: "ACC-001",
@@ -43,9 +44,11 @@ describe("DailyAccountState", () => {
     });
 
     const authorizationService = new AuthorizationService();
+    const interestService = new InterestService();
     const calculator = new DailyAccountStateCalculator(
       ledger,
       authorizationService,
+      interestService,
     );
 
     const states = calculator.calculate(account, [1, 2, 3]);
@@ -79,9 +82,11 @@ describe("DailyAccountState", () => {
       2,
     );
 
+    const interestService = new InterestService();
     const calculator = new DailyAccountStateCalculator(
       ledger,
       authorizationService,
+      interestService,
     );
 
     const states = calculator.calculate(account, [1, 2, 3]);
@@ -118,9 +123,11 @@ describe("DailyAccountState", () => {
 
     authorizationService.markSettled("Auth-A", money("AED", 18500n), 4);
 
+    const interestService = new InterestService();
     const calculator = new DailyAccountStateCalculator(
       ledger,
       authorizationService,
+      interestService,
     );
 
     const states = calculator.calculate(account, [1, 2, 3, 4]);
@@ -136,30 +143,56 @@ describe("DailyAccountState", () => {
     assert.equal(states[3]?.availableBalance.minorUnits, 25000n);
   });
 
-
   it("includes the overdraft fee assessed for the requested value date", () => {
-  const ledger = new Ledger();
-  const authorizationService = new AuthorizationService();
+    const ledger = new Ledger();
+    const authorizationService = new AuthorizationService();
 
-  ledger.append({
-    id: "FEE-001",
-    accountId: "ACC-001",
-    type: "OVERDRAFT_FEE",
-    amount: money("AED", -2500n),
-    valueDate: 2,
-    sourceEventId: "FEE-001",
+    ledger.append({
+      id: "FEE-001",
+      accountId: "ACC-001",
+      type: "OVERDRAFT_FEE",
+      amount: money("AED", -2500n),
+      valueDate: 2,
+      sourceEventId: "FEE-001",
+    });
+
+    const interestService = new InterestService();
+    const calculator = new DailyAccountStateCalculator(
+      ledger,
+      authorizationService,
+      interestService,
+    );
+
+    const states = calculator.calculate(account, [1, 2, 3]);
+
+    assert.equal(states[0]?.overdraftFee.minorUnits, 0n);
+    assert.equal(states[1]?.overdraftFee.minorUnits, 2500n);
+    assert.equal(states[2]?.overdraftFee.minorUnits, 0n);
   });
 
-  const calculator = new DailyAccountStateCalculator(
-    ledger,
-    authorizationService,
-  );
+  it("includes the daily interest accrual from the closing ledger balance", () => {
+    const ledger = new Ledger();
+    ledger.append({
+      id: "E1",
+      accountId: account.id,
+      type: "CREDIT",
+      amount: money("AED", 25000n),
+      valueDate: 1,
+      sourceEventId: "E1",
+    });
 
-  const states = calculator.calculate(account, [1, 2, 3]);
+    const authorizationService = new AuthorizationService();
+    const interestService = new InterestService();
 
-  assert.equal(states[0]?.overdraftFee.minorUnits, 0n);
-  assert.equal(states[1]?.overdraftFee.minorUnits, 2500n);
-  assert.equal(states[2]?.overdraftFee.minorUnits, 0n);
-});
+    const calculator = new DailyAccountStateCalculator(
+      ledger,
+      authorizationService,
+      interestService,
+    );
 
+    const [day1] = calculator.calculate(account, [1]);
+
+    assert.equal(day1?.closingLedgerBalance.minorUnits, 25000n);
+    assert.equal(day1?.interestAccrual.minorUnits, 10n);
+  });
 });

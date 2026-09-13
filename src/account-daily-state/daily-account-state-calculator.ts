@@ -2,12 +2,14 @@ import type { AuthorizationService } from "../authorization/authorization.js";
 import type { Account } from "../domain/account.js";
 import type { DailyAccountState } from "../domain/daily-account-state.js";
 import { add, money, subtract, type Money } from "../domain/money.js";
+import type { InterestService } from "../interest/interest.js";
 import type { Ledger } from "../ledger/ledger.js";
 
 export class DailyAccountStateCalculator {
   constructor(
     private readonly ledgerService: Ledger,
     private readonly authorizationService: AuthorizationService,
+    private readonly interestService: InterestService,
   ) {}
 
   private activeHoldsForDay(account: Account, day: number): Money {
@@ -52,6 +54,11 @@ export class DailyAccountStateCalculator {
 
       const activeHolds = this.activeHoldsForDay(account, day);
       const overdraftFee = this.overdraftFeeForDay(account, day);
+      const interestAccrual = this.interestService.calculateDailyAccrual(
+        account,
+        day,
+        closingLedgerBalance,
+      );
 
       return {
         accountId: account.id,
@@ -60,7 +67,7 @@ export class DailyAccountStateCalculator {
         activeHolds,
         availableBalance: subtract(closingLedgerBalance, activeHolds),
         overdraftFee: overdraftFee,
-        interestAccrual: money(account.currency, 0n),
+        interestAccrual: interestAccrual.amount,
       };
     });
   }
