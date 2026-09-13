@@ -59,3 +59,21 @@ Decision:
 - Fees remain separate append-only ledger entries.
 - Any fee reversal would require a separate explicit business rule or
   event.
+
+## Daily interest rounding
+
+The specification does not explicitly define how daily interest
+calculations should be rounded to the currency's smallest unit.
+
+Decision:
+
+- Daily interest is calculated using the exact minor-unit balance.
+- The result is rounded to the nearest minor unit.
+- Half-way values are rounded up (half-up rounding).
+- The rounded daily accrual is stored as the daily interest amount.
+- Capitalization sums the already-rounded daily accruals.
+- No rounding remainder is discarded during capitalization.
+
+Example:
+AED 12.50 × 0.04% = AED 0.005
+AED uses 2 decimal places, so AED 0.005 rounds half-up to AED 0.01.
