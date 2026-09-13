@@ -106,3 +106,12 @@
 - Added installment credit replay and minor-unit installment allocation.
 - Chose final-installment residual allocation: BHD 10.000 → 3.333, 3.333, 3.334.
 - Added replay and installment tests; all tests pass.
+
+
+## 2026-09-13 13:59:20 +0400
+
+- Changed overdraft fee assessment to occur after the complete event replay.
+- Final closing balances are now used when determining whether a value date incurred an overdraft fee.
+- Backdated events can therefore change whether an earlier day qualifies for a fee.
+- Updated the backdated reversal test to confirm that a reversal can remove the overdraft condition.
+- All EventReplayer tests pass.
