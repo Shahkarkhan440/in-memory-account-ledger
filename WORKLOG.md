@@ -115,3 +115,10 @@
 - Backdated events can therefore change whether an earlier day qualifies for a fee.
 - Updated the backdated reversal test to confirm that a reversal can remove the overdraft condition.
 - All EventReplayer tests pass.
+
+
+## 2026-09-13 14:24:02 +0400
+
+- Added the DailyAccountState calculator.
+- Implemented daily closing ledger balance calculation using value dates.
+- Added a DailyAccountState test covering closing balances across multiple value dates.
