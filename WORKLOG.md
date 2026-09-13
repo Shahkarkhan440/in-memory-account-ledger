@@ -156,3 +156,11 @@
 - Capitalized the sum of the already-rounded daily accruals as a single Day 6 ledger credit.
 - Added integration coverage for the complete backdated replay and interest capitalization flow.
 - Verified that no capitalization occurs when the replay period does not include Day 6. 
+
+## 2026-09-13 15:58:56 +0400
+
+- Implemented the daily financial state reporter.
+- Added formatting for daily closing ledger balances.
+- Added formatting for overdraft fee assessments.
+- Added formatting for daily interest accruals.
+- Added reporter test coverage. 
