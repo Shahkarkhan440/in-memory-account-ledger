@@ -22,10 +22,28 @@ export class DailyAccountStateCalculator {
             (authorization.status === "SETTLED" &&
               authorization.settlementValueDate !== undefined &&
               authorization.settlementValueDate > day)),
-      ).reduce(
+      )
+      .reduce(
         (total, authorization) => add(total, authorization.holdAmount),
         money(account.currency, 0n),
       );
+  }
+
+  private overdraftFeeForDay(account: Account, day: number): Money {
+    const feeEntry = this.ledgerService
+      .entriesForAccount(account.id)
+      .find(
+        (entry) => entry.type === "OVERDRAFT_FEE" && entry.valueDate === day,
+      );
+
+    if (!feeEntry) {
+      return money(account.currency, 0n);
+    }
+
+    return {
+      currency: feeEntry.amount.currency,
+      minorUnits: -feeEntry.amount.minorUnits,
+    };
   }
 
   calculate(account: Account, days: readonly number[]): DailyAccountState[] {
@@ -33,6 +51,7 @@ export class DailyAccountStateCalculator {
       const closingLedgerBalance = this.ledgerService.balanceAt(account, day);
 
       const activeHolds = this.activeHoldsForDay(account, day);
+      const overdraftFee = this.overdraftFeeForDay(account, day);
 
       return {
         accountId: account.id,
@@ -40,7 +59,7 @@ export class DailyAccountStateCalculator {
         closingLedgerBalance,
         activeHolds,
         availableBalance: subtract(closingLedgerBalance, activeHolds),
-        overdraftFee: money(account.currency, 0n),
+        overdraftFee: overdraftFee,
         interestAccrual: money(account.currency, 0n),
       };
     });

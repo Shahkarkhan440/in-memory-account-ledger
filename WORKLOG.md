@@ -132,3 +132,9 @@
 - Calculated available balance as closing ledger balance minus active holds.
 - Added tests covering authorization activation and hold release after settlement.
 
+## 2026-09-13 15:14:42 +0400
+
+- Extended DailyAccountState calculation to include the overdraft fee assessed for each value date.
+- Read overdraft fee information from the append-only ledger without creating or modifying ledger entries.
+- Represented the assessed overdraft fee as a positive amount in DailyAccountState while keeping the ledger fee entry negative.
+- Added a DailyAccountState test covering fee presence only on the assessed value date.

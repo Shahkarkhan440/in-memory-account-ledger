@@ -135,4 +135,31 @@ describe("DailyAccountState", () => {
     assert.equal(states[2]?.availableBalance.minorUnits, 5000n);
     assert.equal(states[3]?.availableBalance.minorUnits, 25000n);
   });
+
+
+  it("includes the overdraft fee assessed for the requested value date", () => {
+  const ledger = new Ledger();
+  const authorizationService = new AuthorizationService();
+
+  ledger.append({
+    id: "FEE-001",
+    accountId: "ACC-001",
+    type: "OVERDRAFT_FEE",
+    amount: money("AED", -2500n),
+    valueDate: 2,
+    sourceEventId: "FEE-001",
+  });
+
+  const calculator = new DailyAccountStateCalculator(
+    ledger,
+    authorizationService,
+  );
+
+  const states = calculator.calculate(account, [1, 2, 3]);
+
+  assert.equal(states[0]?.overdraftFee.minorUnits, 0n);
+  assert.equal(states[1]?.overdraftFee.minorUnits, 2500n);
+  assert.equal(states[2]?.overdraftFee.minorUnits, 0n);
+});
+
 });
