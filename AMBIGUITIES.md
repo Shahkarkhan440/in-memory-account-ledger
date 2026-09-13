@@ -77,3 +77,23 @@ Decision:
 Example:
 AED 12.50 × 0.04% = AED 0.005
 AED uses 2 decimal places, so AED 0.005 rounds half-up to AED 0.01.
+
+
+## Installment residual allocation
+
+The specification requires three equal BHD installments from
+BHD 10.000, but does not specify how the repeating decimal remainder
+should be allocated.
+
+Decision:
+
+- Monetary amounts are split using integer minor units.
+- The base installment receives the integer division result.
+- Any remainder is assigned to the final installment.
+- Therefore BHD 10.000 split into three installments becomes:
+  - BHD 3.333
+  - BHD 3.333
+  - BHD 3.334
+- The installment amounts always sum exactly to the original total.
+- The event replay layer consumes the already-allocated installment
+  amounts and does not perform the split itself.

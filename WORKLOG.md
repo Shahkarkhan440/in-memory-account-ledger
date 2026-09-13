@@ -99,3 +99,10 @@
 - Confirmed capitalization sums the rounded daily accruals without discarding a remainder.
 - Added tests covering positive, zero, negative, AED, BHD, rounding, daily independence, and interest capitalization behavior.
 
+
+## 2026-09-13 13:39:49 +0400
+
+- Implemented event replay for credit, debit, authorization, settlement, and reversal events.
+- Added installment credit replay and minor-unit installment allocation.
+- Chose final-installment residual allocation: BHD 10.000 → 3.333, 3.333, 3.334.
+- Added replay and installment tests; all tests pass.
